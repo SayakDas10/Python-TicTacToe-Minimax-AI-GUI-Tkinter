@@ -87,7 +87,6 @@ def AITurn(board):
         turn = minimax(board, depth, True) #getting the best turn for ai
         row = turn[0]
         col = turn[1]
-    #print(row,'   ', col)
     if ValidMove(board, row, col):
         print("Ai Turn: ")
         board[row][col] = ai
@@ -96,26 +95,21 @@ def AITurn(board):
 
 #main function
 def main():
-    turn_counter = 0
     board = [[None for i in range(3)]for i in range(3)]
     while True:
-        #print(turn_counter)
         PlayerTurn(board)
         DisplayBoard(board)
         if CheckWinner(board, human):
             print(human," Won")
             break
-        if turn_counter == 8:
-            print("Tie Game")
+        if len(GetEmptyCells(board)) == 0:
+            print("Tie Game.")
             break
-        turn_counter += 1
         AITurn(board)
         DisplayBoard(board)
         if CheckWinner(board, ai):
             print(ai," Won")
             break
-        turn_counter += 1
-    
 
 if __name__ == "__main__":
     main()
