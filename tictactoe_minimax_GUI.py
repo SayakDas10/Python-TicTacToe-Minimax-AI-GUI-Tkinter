@@ -8,13 +8,15 @@ human = 'X'
 ai = 'O'
 draw = 'D'
 
-board = [[None for i in range(3)]for i in range(3)]
+board = [[None for i in range(3)]for i in range(3)] #defining the board
 
 root = tk.Tk()
 root.title('Tic-Tac-Toe AI')
 
 canvas = tk.Canvas(root, height= h, width =w, bg='white')
 canvas.pack()
+
+# Found a pattern and implemented it as it is much faster in python than loopinf through or hard coding
 
 def DrawHumanTurn(row, col, canvas):
     x1, x2 = col, row
@@ -38,12 +40,15 @@ def DrawAITurn(row, col, canvas):
     circle = canvas.create_oval(c1-48, c2-48, c1+48, c2+48, fill='black')
     circle = canvas.create_oval(c1-44, c2-44, c1+44, c2+44, fill='white')
     
+# draw the board on canvas
+
 def DrawGrid(canvas):
     line = canvas.create_line(100, 0, 100, 300, fill='black')
     line = canvas.create_line(200, 0, 200, 300, fill='black')
     line = canvas.create_line(0, 100, 300, 100, fill='black')
     line = canvas.create_line(0, 200, 300, 200, fill='black')
 
+# Possible valid moves and the depth is calculated from number of empty cells in the board
 def GetEmptyCells(board):
     empty =[]
     for i in range(len(board[0])):
@@ -52,10 +57,11 @@ def GetEmptyCells(board):
                 empty.append([i, j])
     return empty
 
+# To check if a move is a valid move, ie. if a move corresponds to an empty cell or not
 def ValidMove(board, row, col):
     return True if [row, col] in GetEmptyCells(board) else False
 
-def CheckWinner(board, player): 
+def CheckWinner(board, player):  # to check if someone has won or not
     if board[0][0] == board[1][1] and board[0][0] == board[2][2] and board[0][0] == player: #Check maindiagonal
         return True 
     if board[0][2] == board[1][1] and board[0][2] == board[2][0] and board[0][2] == player: #Check counterdiagonal
@@ -66,7 +72,7 @@ def CheckWinner(board, player):
             return True
         if board[0][i] == board[1][i] and board[0][i] == board[2][i] and board[0][i] == player: #Check column wise
             return True
-def GameOver(player):
+def GameOver(player): #To show a gameover message and kill the tkinter window
     if player == ai:
         messagebox.showinfo("HAHA LOSER!","AI won")
         root.destroy()
@@ -77,6 +83,7 @@ def GameOver(player):
         messagebox.showinfo('BOOORING!!','Draw')
         root.destroy()
 
+# static evaluation function, sets a score to the leaf node
 def GetScore(board):
     if CheckWinner(board, ai):
         score = -1
@@ -85,28 +92,31 @@ def GetScore(board):
     else: score = 0
     return score
 
+# THE ULTIMATE ALGOOOO
 def minimax(board, depth, minimizing):
     if minimizing:
-        optimal = [-1, -1, np.inf] 
-    else: optimal = [-1, -1, -np.inf] 
-    if depth == 0 or CheckWinner(board, human) or CheckWinner(board, ai): 
+        optimal = [-1, -1, np.inf] # defining default temporary score for ai
+    else: optimal = [-1, -1, -np.inf] # defining default temporary score for human
+    if depth == 0 or CheckWinner(board, human) or CheckWinner(board, ai): #getting score of a leaf node or the node where a game ends
         score = GetScore(board)
         return [-1, -1, score]
     
-    for position in GetEmptyCells(board):
+    for position in GetEmptyCells(board):  #looping throuh all possible valid moves of the board at a certain position
         row, col = position[0], position[1]
-        board[row][col] = ai if minimizing else human 
-        score = minimax(board, depth - 1, not minimizing) 
-        board[row][col] = None 
+        board[row][col] = ai if minimizing else human #changing board after deciding a valid move
+        score = minimax(board, depth - 1, not minimizing) #resursivly calling minimax on the end node
+        board[row][col] = None #changing back to previous state
         score[0], score[1] = row, col 
 
         if minimizing:
-            if score[2] < optimal[2]:
+            if score[2] < optimal[2]: #checking the minimum score for ai
                 optimal = score
         else:
-            if score[2] > optimal[2]:
+            if score[2] > optimal[2]:  #checking maximum score for human
                 optimal = score
     return optimal 
+
+#utility functions
 
 def AITurn(board):
     depth = len(GetEmptyCells(board)) 
@@ -139,6 +149,7 @@ def PlayerTurn(board, cellIndex):
     else: print("Wrong Move")
     AITurn(board)
 
+# To convert corordinate values to an integer that corresponds to a cell in the board
 def GetIntegerValue(corr):
     x, y = corr[0], corr[1]
     if x > 0 and x < 100 and y > 0 and y < 100:
@@ -159,11 +170,13 @@ def GetIntegerValue(corr):
         PlayerTurn(board, 7)
     elif x > 200 and x < 300 and y > 200 and y < 300:
         PlayerTurn(board, 8)
-    
+
+# To get the mouse click coordinate
 def getxy(event):
         x, y = event.x, event.y
         return GetIntegerValue([x, y])
 
+#main function
 def main():
     x1, x2, x3, x4 = 0, 0, 300, 300
     canvas.create_rectangle(x1, x2, x3, x4, fill='white', tag='rectangle')

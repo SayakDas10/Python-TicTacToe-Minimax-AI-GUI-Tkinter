@@ -11,7 +11,6 @@ def GetEmptyCells(board):
         for j in range(len(board[1])):
             if board[i][j] == None:
                 empty.append([i, j])
-    #print(empty)
     return empty
 
 # To check if a move is a valid move, ie. if a move corresponds to an empty cell or not
