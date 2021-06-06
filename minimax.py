@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 human = 'X'
 ai = 'O'
@@ -44,8 +45,7 @@ def minimax(board, depth, minimizing):
         optimal = [-1, -1, np.inf] # defining default temporary score for ai
     else: optimal = [-1, -1, -np.inf] # defining default temporary score for human
     if depth == 0 or CheckWinner(board, human) or CheckWinner(board, ai): #getting score of a leaf node or the node where a game ends
-        score = GetScore(board)
-        return [-1, -1, score]
+        return [-1, -1, GetScore(board)]
     
     for position in GetEmptyCells(board): #looping throuh all possible valid moves of the board at a certain position
         row, col = position[0], position[1]
@@ -61,6 +61,39 @@ def minimax(board, depth, minimizing):
             if score[2] > optimal[2]: #checking maximum score for human
                 optimal = score
     return optimal 
+
+def alpha_beta_minimax(board, depth, alpha, beta, minimizing):
+    
+    if minimizing:
+        optimal = [-1, -1, np.inf] # defining default temporary score for ai
+    else: optimal = [-1, -1, -np.inf] # defining default temporary score for human
+    if depth == 0 or CheckWinner(board, human) or CheckWinner(board, ai): #getting score of a leaf node or the node where a game ends
+        return [-1, -1, GetScore(board)]
+    
+    for position in GetEmptyCells(board): #looping throuh all possible valid moves of the board at a certain position
+        row, col = position[0], position[1]
+        board[row][col] = ai if minimizing else human #changing board after deciding a valid move
+        score = alpha_beta_minimax(board, depth - 1, alpha, beta, not minimizing) #resursivly calling minimax on the end node
+        board[row][col] = None #changing back to previous state
+        score[0], score[1] = row, col 
+
+        if minimizing:
+            if score[2] < optimal[2]: #checking the minimum score for ai
+                optimal = score
+
+            beta = min(beta, optimal[2])
+            if beta <= alpha:
+                break
+        else:
+            if score[2] > optimal[2]: #checking maximum score for human
+                optimal = score
+            
+            alpha = max(alpha, optimal[2])
+            if beta <= alpha:
+                break
+    
+    return optimal 
+
 #utility functions
 def DisplayBoard(board):
     print('\n')
@@ -77,13 +110,14 @@ def PlayerTurn(board):
     else: print("Wrong Move")
     return board
 
-def AITurn(board):
+def AITurn(board, choice):
     depth = len(GetEmptyCells(board)) #depth of the tree is the length of empty cell set
     if depth == 9: #if the ai goes first, it chooses a random cell from the board
         row = np.random.randint(0, 1, 2)
         col = np.random.randint(0, 1, 2)
     else:
-        turn = minimax(board, depth, True) #getting the best turn for ai
+        #turn = minimax(board, depth, True) #getting the best turn for ai
+        turn = minimax(board, depth, True) if choice == 1 else alpha_beta_minimax(board, depth, -np.inf, np.inf, True) #getting the best turn for ai
         row = turn[0]
         col = turn[1]
     if ValidMove(board, row, col):
@@ -95,6 +129,7 @@ def AITurn(board):
 #main function
 def main():
     board = [[None for i in range(3)]for i in range(3)]
+    choice = int(input("Press 1 for minimax, for minimax with pruning press any number other than 1\n"))
     while True:
         PlayerTurn(board)
         DisplayBoard(board)
@@ -104,7 +139,9 @@ def main():
         if len(GetEmptyCells(board)) == 0:
             print("Tie Game.")
             break
-        AITurn(board)
+        start = time.time()
+        AITurn(board, choice)
+        print("Time: ", (time.time()-start)*1000)
         DisplayBoard(board)
         if CheckWinner(board, ai):
             print(ai," Won")
@@ -112,3 +149,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

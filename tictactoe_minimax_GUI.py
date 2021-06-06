@@ -8,10 +8,13 @@ human = 'X'
 ai = 'O'
 draw = 'D'
 
+
 board = [[None for i in range(3)]for i in range(3)] #defining the board
 
 root = tk.Tk()
 root.title('Tic-Tac-Toe AI')
+choice = tk.BooleanVar()
+choice.set(False)
 
 canvas = tk.Canvas(root, height= h, width =w, bg='white')
 canvas.pack()
@@ -94,6 +97,7 @@ def GetScore(board):
 
 # THE ULTIMATE ALGOOOO
 def minimax(board, depth, minimizing):
+    #print('not pruning')
     if minimizing:
         optimal = [-1, -1, np.inf] # defining default temporary score for ai
     else: optimal = [-1, -1, -np.inf] # defining default temporary score for human
@@ -116,6 +120,37 @@ def minimax(board, depth, minimizing):
                 optimal = score
     return optimal 
 
+def alpha_beta_minimax(board, depth, alpha, beta, minimizing):
+    #print('pruning')
+    if minimizing:
+        optimal = [-1, -1, np.inf] # defining default temporary score for ai
+    else: optimal = [-1, -1, -np.inf] # defining default temporary score for human
+    if depth == 0 or CheckWinner(board, human) or CheckWinner(board, ai): #getting score of a leaf node or the node where a game ends
+        return [-1, -1, GetScore(board)]
+    
+    for position in GetEmptyCells(board): #looping throuh all possible valid moves of the board at a certain position
+        row, col = position[0], position[1]
+        board[row][col] = ai if minimizing else human #changing board after deciding a valid move
+        score = alpha_beta_minimax(board, depth - 1, alpha, beta, not minimizing) #resursivly calling minimax on the end node
+        board[row][col] = None #changing back to previous state
+        score[0], score[1] = row, col 
+
+        if minimizing:
+            if score[2] < optimal[2]: #checking the minimum score for ai
+                optimal = score
+
+            beta = min(beta, optimal[2])
+            if beta <= alpha:
+                break
+        else:
+            if score[2] > optimal[2]: #checking maximum score for human
+                optimal = score
+            
+            alpha = max(alpha, optimal[2])
+            if beta <= alpha:
+                break
+    return optimal 
+
 #utility functions
 
 def AITurn(board):
@@ -124,7 +159,7 @@ def AITurn(board):
         row = np.random.randint(0, 1, 2)
         col = np.random.randint(0, 1, 2)
     else:
-        turn = minimax(board, depth, True)
+        turn = alpha_beta_minimax(board, depth, -np.inf, np.inf, True) if choice else minimax(board, depth, True)
         row = turn[0]
         col = turn[1]
     if ValidMove(board, row, col):
@@ -181,6 +216,10 @@ def main():
     x1, x2, x3, x4 = 0, 0, 300, 300
     canvas.create_rectangle(x1, x2, x3, x4, fill='white', tag='rectangle')
     DrawGrid(canvas)
+    def UsePruning():
+        choice = True
+    checkbox = tk.Checkbutton(root, text = 'Click to use pruning',var= choice)
+    checkbox.pack()
     canvas.tag_bind('rectangle','<Button-1>', getxy)
     root.mainloop()
 if __name__ == "__main__":
